@@ -65,7 +65,7 @@ namespace Stacks
         private void PositionWindow()
         {
             var workArea = SystemParameters.WorkArea;
-            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2);
+            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2) - 500;
             this.Top = _currentTargetPosition.Y - this.ActualHeight - SettingsManager.Current.VerticalOffset;
 
             if (this.Top < workArea.Top)
