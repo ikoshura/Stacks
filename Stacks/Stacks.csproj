@@ -1,23 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Icons\folder.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Icons\folder.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MicaWPF" Version="6.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MicaWPF" Version="6.3.0" />
+		<PackageReference Include="Microsoft.WindowsAPICodePack-Shell" Version="1.1.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="Icons\folder.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<Resource Include="Icons\folder.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Update="Themes\DarkTheme.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Themes\LightTheme.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
 
 </Project>

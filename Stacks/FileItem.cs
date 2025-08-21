@@ -1,4 +1,4 @@
-﻿using System.Windows.Media;
+﻿using System.Windows.Media; // Pastikan using ini ada
 
 namespace Stacks
 {
@@ -6,6 +6,7 @@ namespace Stacks
     {
         public string? FilePath { get; set; }
         public string? FileName { get; set; }
+        // Ubah tipe data dari ImageSource? menjadi ImageSource?
         public ImageSource? Thumbnail { get; set; }
     }
 }

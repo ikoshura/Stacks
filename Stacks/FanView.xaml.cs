@@ -6,81 +6,85 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Interop;
+
+// Perbaikan: Mendefinisikan alias untuk menghindari konflik
+using Point = System.Windows.Point;
+using Icon = System.Drawing.Icon;
 
 namespace Stacks
 {
-    public partial class FanView : Window
+    public partial class FanView : MicaWPF.Controls.MicaWindow
     {
         public ObservableCollection<FileItem> Files { get; set; }
 
-        /// <summary>
-        /// Offset vertikal popup relatif terhadap widget.
-        /// Nilai positif = naik, negatif = turun.
-        /// </summary>
-        public int PopupOffsetY { get; set; } = 320;
+        private bool _isFirstTimeShowing = true;
+        private Point _currentTargetPosition;
+        private double _currentTargetWidth;
 
         public FanView()
         {
             InitializeComponent();
-
-            // Sembunyikan saat pertama kali dibuat
-            this.Visibility = Visibility.Hidden;
-
             Files = new ObservableCollection<FileItem>();
             FileItemsControl.ItemsSource = Files;
-            LoadFiles();
         }
 
-        // --- METODE: Perintah untuk muncul di posisi tertentu ---
-        public void ShowAt(Point widgetPosition)
+        public void ShowAt(Point widgetPosition, double widgetWidth)
         {
-            // Untuk menghindari flicker, kita posisikan DULU baru tampilkan
-            this.Visibility = Visibility.Hidden;
-            this.UpdateLayout(); // Paksa ukur
-            PositionWindow(widgetPosition);
+            _currentTargetPosition = widgetPosition;
+            _currentTargetWidth = widgetWidth;
 
-            this.Show();
+            LoadFiles();
+            this.DataContext = SettingsManager.Instance;
+
+            if (_isFirstTimeShowing)
+            {
+                this.WindowStartupLocation = WindowStartupLocation.Manual;
+                this.ShowActivated = false;
+                this.Show();
+                this.Hide();
+
+                this.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    PositionWindow();
+                    this.Show();
+                    _isFirstTimeShowing = false;
+                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            }
+            else
+            {
+                PositionWindow();
+                this.Show();
+            }
+
             this.Activate();
         }
 
-        // Atur posisi popup window
-        private void PositionWindow(Point widgetPosition)
+        private void PositionWindow()
         {
             var workArea = SystemParameters.WorkArea;
+            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2);
+            this.Top = _currentTargetPosition.Y - this.ActualHeight - SettingsManager.Current.VerticalOffset;
 
-            this.Left = widgetPosition.X - (this.ActualWidth / 2) + (this.Width / 2);
-            this.Top = widgetPosition.Y - this.ActualHeight - PopupOffsetY;
-
-            // Kalau mentok atas layar, taruh di bawah widget biar tetap kelihatan
             if (this.Top < workArea.Top)
-            {
-                this.Top = widgetPosition.Y + 40;
-            }
+                this.Top = _currentTargetPosition.Y + 40;
 
-            // Batas kiri/kanan layar
             if (this.Left < workArea.Left) this.Left = workArea.Left;
             if (this.Left + this.ActualWidth > workArea.Right)
                 this.Left = workArea.Right - this.ActualWidth;
-        }
-
-        private void Window_Deactivated(object sender, EventArgs e)
-        {
-            this.Hide(); // Gunakan Hide() agar bisa ditampilkan lagi
         }
 
         private async void LoadFiles()
         {
             try
             {
-                string downloadsPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads"
-                );
-                if (!Directory.Exists(downloadsPath)) { return; }
+                string sourcePath = SettingsManager.Current.SourceFolderPath;
+                if (!Directory.Exists(sourcePath)) { Files.Clear(); return; }
 
                 var filePaths = await Task.Run(() =>
-                    Directory.GetFiles(downloadsPath)
+                    Directory.GetFiles(sourcePath)
                              .OrderByDescending(f => new FileInfo(f).LastWriteTime)
                              .Take(10).ToList());
 
@@ -97,11 +101,11 @@ namespace Stacks
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load files: {ex.Message}");
+                System.Windows.MessageBox.Show($"Failed to load files: {ex.Message}");
             }
         }
 
-        private BitmapImage? CreateThumbnail(string filePath)
+        private ImageSource? CreateThumbnail(string filePath)
         {
             try
             {
@@ -114,23 +118,39 @@ namespace Stacks
                 bitmap.Freeze();
                 return bitmap;
             }
-            catch { return null; }
+            catch
+            {
+                try
+                {
+                    // PERBAIKAN: Memanggil method dari kelas Icon yang benar
+                    using (Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(filePath))
+                    {
+                        return Imaging.CreateBitmapSourceFromHIcon(
+                            icon.Handle,
+                            Int32Rect.Empty,
+                            BitmapSizeOptions.FromEmptyOptions());
+                    }
+                }
+                catch { return null; }
+            }
         }
 
-        private void File_MouseMove(object sender, MouseEventArgs e)
+        // PERBAIKAN: Spesifikasikan System.Windows.Input.MouseEventArgs
+        private void File_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element)
             {
                 var fileItem = element.DataContext as FileItem;
                 if (fileItem != null && fileItem.FilePath != null)
                 {
-                    var data = new DataObject(DataFormats.FileDrop, new string[] { fileItem.FilePath });
-                    DragDrop.DoDragDrop(element, data, DragDropEffects.Copy);
+                    var data = new System.Windows.DataObject(System.Windows.DataFormats.FileDrop, new string[] { fileItem.FilePath });
+                    System.Windows.DragDrop.DoDragDrop(element, data, System.Windows.DragDropEffects.Copy);
                 }
             }
         }
 
-        private void File_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        // PERBAIKAN: Spesifikasikan System.Windows.Input.MouseButtonEventArgs
+        private void File_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is FrameworkElement element && element.IsMouseOver)
             {
@@ -144,7 +164,7 @@ namespace Stacks
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Cannot open file: " + ex.Message);
+                        System.Windows.MessageBox.Show("Cannot open file: " + ex.Message);
                     }
                 }
             }
@@ -152,18 +172,15 @@ namespace Stacks
 
         private void OpenInExplorerButton_Click(object sender, RoutedEventArgs e)
         {
-            string downloadsPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads"
-            );
+            string sourcePath = SettingsManager.Current.SourceFolderPath;
             try
             {
-                Process.Start("explorer.exe", downloadsPath);
+                Process.Start("explorer.exe", sourcePath);
                 this.Hide();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Cannot open File Explorer: " + ex.Message);
+                System.Windows.MessageBox.Show("Cannot open File Explorer: " + ex.Message);
             }
         }
     }

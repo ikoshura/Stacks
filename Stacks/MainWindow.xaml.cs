@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 
@@ -12,8 +13,9 @@ namespace Stacks
         public MainWindow()
         {
             InitializeComponent();
+            WidgetButton.MouseRightButtonUp += WidgetButton_MouseRightButtonUp;
         }
-        
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -40,7 +42,7 @@ namespace Stacks
                     handled = true;
                     return (IntPtr)HTCLIENT;
                 case WM_LBUTTONUP:
-                    WidgetClicked?.Invoke(); // Cukup panggil event
+                    WidgetClicked?.Invoke();
                     handled = true;
                     break;
                 case WM_WINDOWPOSCHANGED:
@@ -72,7 +74,7 @@ namespace Stacks
                 if (taskbarHandle == IntPtr.Zero) { return; }
                 Interop.SetParent(windowHandle, taskbarHandle);
             }
-            catch {}
+            catch { }
         }
 
         private void PositionInTaskbar(IntPtr windowHandle)
@@ -109,5 +111,26 @@ namespace Stacks
         private static extern int SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
         [StructLayout(LayoutKind.Sequential)]
         private struct WINDOWPOS { public IntPtr hwnd; public IntPtr hwndInsertAfter; public int x; public int y; public int cx; public int cy; public uint flags; }
+
+        private void WidgetButton_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (WidgetButton.ContextMenu != null)
+            {
+                WidgetButton.ContextMenu.IsOpen = true;
+                e.Handled = true;
+            }
+        }
+
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new SettingsWindow { Owner = this };
+            settingsWindow.ShowDialog();
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            // PERBAIKAN: Spesifikasikan System.Windows.Application
+            System.Windows.Application.Current.Shutdown();
+        }
     }
 }
