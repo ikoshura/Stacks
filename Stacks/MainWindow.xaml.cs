@@ -95,7 +95,7 @@ namespace Stacks
             if (taskbarRect.right - taskbarRect.left > taskbarRect.bottom - taskbarRect.top)
             {
                 newX = trayRect.left - widgetWidth - 4;
-                newY = ((taskbarRect.bottom - taskbarRect.top - widgetHeight) / 2) - 2;
+                newY = ((taskbarRect.bottom - taskbarRect.top - widgetHeight) / 2);
             }
             else
             {

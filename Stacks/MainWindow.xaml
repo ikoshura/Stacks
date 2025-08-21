@@ -38,14 +38,14 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="Overlay"
                                                 Property="Background"
-                                                Value="#33000000"/>
+                                                Value="#10ffffff"/>
                                         <!-- abu gelap -->
                                     </Trigger>
                                     <!-- Pressed -->
                                     <Trigger Property="IsPressed" Value="True">
                                         <Setter TargetName="Overlay"
                                                 Property="Background"
-                                                Value="#55000000"/>
+                                                Value="#08ffffff"/>
                                         <!-- lebih gelap -->
                                     </Trigger>
                                     <!-- Disabled -->
@@ -63,7 +63,7 @@
             </Button.Style>
 
             <!-- Ikon -->
-            <Image Source="/Icons/folder.png" Width="24" Height="24"/>
+            <Image Source="{DynamicResource App.WidgetIcon}" Width="20" Height="20"/>
 
             <!-- ContextMenu -->
             <Button.ContextMenu>

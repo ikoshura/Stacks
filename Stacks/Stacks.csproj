@@ -20,6 +20,8 @@
 
 	<ItemGroup>
 		<Resource Include="Icons\folder.png" />
+		<Resource Include="Icons\icon-light.png" />
+		<Resource Include="Icons\icon-dark.png" />
 	</ItemGroup>
 
 	<ItemGroup>
