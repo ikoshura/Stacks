@@ -5,6 +5,8 @@
     <SolidColorBrush x:Key="App.BorderBrush" Color="#555555"/>
     <SolidColorBrush x:Key="App.PrimaryTextBrush" Color="White"/>
     <SolidColorBrush x:Key="App.SecondaryTextBrush" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="App.HoverBrush" Color="#20FFFFFF"/>
+    <SolidColorBrush x:Key="App.HoverBrushInverted" Color="#30FFFFFF"/>
 
     <!-- Tambahkan icon untuk dark theme -->
     <BitmapImage x:Key="App.WidgetIcon" UriSource="/Icons/icon-dark.png"/>

@@ -65,15 +65,26 @@ namespace Stacks
         private void PositionWindow()
         {
             var workArea = SystemParameters.WorkArea;
-            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2) - 500;
+            // PERUBAHAN DI SINI: Menambahkan konstanta untuk jarak dari tepi layar
+            const double screenMargin = 12.0;
+
+            // Kalkulasi posisi tengah horizontal
+            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2);
+            // Kalkulasi posisi atas
             this.Top = _currentTargetPosition.Y - this.ActualHeight - SettingsManager.Current.VerticalOffset;
 
+            // Jika posisi terlalu ke atas (misalnya taskbar di atas), pindahkan ke bawah
             if (this.Top < workArea.Top)
                 this.Top = _currentTargetPosition.Y + 40;
 
-            if (this.Left < workArea.Left) this.Left = workArea.Left;
+            // PERUBAHAN DI SINI: Memeriksa batas layar dengan menambahkan margin
+            // Jika jendela terlalu ke kiri, atur posisinya dengan jarak dari tepi kiri
+            if (this.Left < workArea.Left)
+                this.Left = workArea.Left + screenMargin;
+
+            // Jika jendela terlalu ke kanan, atur posisinya dengan jarak dari tepi kanan
             if (this.Left + this.ActualWidth > workArea.Right)
-                this.Left = workArea.Right - this.ActualWidth;
+                this.Left = workArea.Right - this.ActualWidth - screenMargin;
         }
 
         private async void LoadFiles()

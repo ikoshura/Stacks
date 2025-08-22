@@ -7,7 +7,6 @@ using Point = System.Windows.Point;
 
 namespace Stacks
 {
-    // Perbaikan: Spesifikasikan bahwa ini adalah aplikasi WPF
     public partial class App : System.Windows.Application
     {
         private MainWindow? _mainWindow;
@@ -30,11 +29,23 @@ namespace Stacks
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
 
+        // PERBAIKAN UTAMA DAN FINAL ADA DI SINI
         private void FanView_Deactivated(object sender, EventArgs e)
         {
+            // Jika deaktivasi terjadi karena mouse berada di atas widget utama,
+            // berarti OnWidgetClicked akan menangani logika buka/tutup.
+            // Oleh karena itu, kita tidak melakukan apa-apa di sini untuk mencegah penutupan ganda.
+            if (_mainWindow != null && _mainWindow.IsMouseOver)
+            {
+                return;
+            }
+
+            // Jika mouse tidak di atas widget, berarti pengguna mengklik di tempat lain.
+            // Dalam kasus ini, kita sembunyikan jendela pop-up.
             _fanView?.Hide();
         }
 
+        // Logika ini sekarang dapat berjalan tanpa gangguan
         private void OnWidgetClicked()
         {
             if (_fanView == null || _mainWindow == null) return;
@@ -45,7 +56,6 @@ namespace Stacks
             }
             else
             {
-                // Menggunakan alias 'Point' yang sudah didefinisikan
                 Point widgetPosition = _mainWindow.PointToScreen(new Point(0, 0));
                 _fanView.ShowAt(widgetPosition, _mainWindow.ActualWidth);
             }
@@ -73,9 +83,10 @@ namespace Stacks
 
             if (themeDictionary != null)
             {
-                Resources.MergedDictionaries.Clear();
-                Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("Themes/LightTheme.xaml", UriKind.Relative) });
-                Resources.MergedDictionaries.Add(themeDictionary);
+                var mergedDictionaries = Resources.MergedDictionaries;
+                mergedDictionaries.Clear();
+                mergedDictionaries.Add(new ResourceDictionary { Source = new Uri("Themes/ModernStyles.xaml", UriKind.Relative) });
+                mergedDictionaries.Add(themeDictionary);
             }
         }
 

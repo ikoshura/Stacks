@@ -41,10 +41,12 @@ namespace Stacks
                 case WM_NCHITTEST:
                     handled = true;
                     return (IntPtr)HTCLIENT;
+
                 case WM_LBUTTONUP:
                     WidgetClicked?.Invoke();
                     handled = true;
                     break;
+
                 case WM_WINDOWPOSCHANGED:
                     var taskbarHandleCheck = Interop.FindWindow(Interop.TASKBAR_CLASS, null);
                     if (lParam != IntPtr.Zero)
@@ -129,7 +131,6 @@ namespace Stacks
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            // PERBAIKAN: Spesifikasikan System.Windows.Application
             System.Windows.Application.Current.Shutdown();
         }
     }

@@ -5,6 +5,8 @@
     <SolidColorBrush x:Key="App.BorderBrush" Color="#AAAAAA"/>
     <SolidColorBrush x:Key="App.PrimaryTextBrush" Color="Black"/>
     <SolidColorBrush x:Key="App.SecondaryTextBrush" Color="#555555"/>
+    <SolidColorBrush x:Key="App.HoverBrush" Color="#10000000"/>
+    <SolidColorBrush x:Key="App.HoverBrushInverted" Color="#20000000"/>
 
     <!-- Tambahkan icon untuk light theme -->
     <BitmapImage x:Key="App.WidgetIcon" UriSource="/Icons/icon-light.png"/>

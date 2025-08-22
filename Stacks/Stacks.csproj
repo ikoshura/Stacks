@@ -28,6 +28,9 @@
 		<Page Update="Themes\DarkTheme.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
+		<Page Update="Themes\ModernStyles.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Themes\LightTheme.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>

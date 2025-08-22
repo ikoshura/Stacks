@@ -17,49 +17,12 @@
         ShowInTaskbar="False"
         Topmost="True">
 
-    <mica:MicaWindow.Resources>
-        <!-- Style custom untuk tombol supaya hover tidak biru -->
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource App.SecondaryTextBrush}"/>
-            <Setter Property="Padding" Value="6,3"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <!-- Hover ala Mica (abu-abu lembut, bukan biru) -->
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#22000000"/>
-                            </Trigger>
-                            <!-- Klik -->
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#33000000"/>
-                            </Trigger>
-                            <!-- Disabled -->
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </mica:MicaWindow.Resources>
-
+    <!-- Padding utama dikurangi untuk layout yang lebih ketat -->
     <Border Background="{DynamicResource App.BackgroundBrush}" 
             CornerRadius="12" 
             BorderThickness="1" 
-            BorderBrush="{DynamicResource App.BorderBrush}">
+            BorderBrush="{DynamicResource App.BorderBrush}"
+            Padding="8">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -67,39 +30,58 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Daftar file -->
-            <ItemsControl x:Name="FileItemsControl" Grid.Row="0" Margin="10,10,10,0">
+            <!-- Margin dihilangkan dari ItemsControl -->
+            <ItemsControl x:Name="FileItemsControl" Grid.Row="0">
+
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="10"
-                                    HorizontalAlignment="Center"
-                                    MouseMove="File_MouseMove"
-                                    MouseLeftButtonUp="File_MouseLeftButtonUp">
-                            <Image Source="{Binding Thumbnail}" 
-                                   Width="80" Height="80" Stretch="Uniform"/>
-                            <TextBlock Text="{Binding FileName}"
-                                       Foreground="{DynamicResource App.PrimaryTextBrush}"
-                                       TextTrimming="CharacterEllipsis" 
-                                       TextAlignment="Center" 
-                                       MaxWidth="100" 
-                                       Margin="0,5,0,0"/>
-                        </StackPanel>
+                        <!-- Margin dan Padding pada item dikurangi -->
+                        <Border x:Name="ItemBorder" 
+                                Background="Transparent" 
+                                CornerRadius="6" 
+                                Margin="4" 
+                                Padding="8"
+                                Cursor="Hand"
+                                MouseMove="File_MouseMove"
+                                MouseLeftButtonUp="File_MouseLeftButtonUp">
+                            <StackPanel HorizontalAlignment="Center">
+                                <!-- Ukuran thumbnail diperkecil -->
+                                <Border CornerRadius="6" Width="56" Height="56">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="{Binding Thumbnail}" Stretch="UniformToFill"/>
+                                    </Border.Background>
+                                </Border>
+                                <!-- Font dan ukuran teks diperkecil -->
+                                <TextBlock Text="{Binding FileName}"
+                                           Foreground="{DynamicResource App.PrimaryTextBrush}"
+                                           TextTrimming="CharacterEllipsis" 
+                                           TextAlignment="Center" 
+                                           MaxWidth="70" 
+                                           Margin="0,6,0,0"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           MaxHeight="30"/>
+                            </StackPanel>
+                        </Border>
+
+                        <DataTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource App.HoverBrush}"/>
+                            </Trigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 
-                <!-- Panel bisa horizontal/vertical sesuai SettingsManager -->
                 <ItemsControl.Style>
                     <Style TargetType="ItemsControl">
+                        <Setter Property="ItemsPanel">
+                            <Setter.Value>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="5"/>
+                                </ItemsPanelTemplate>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Current.Orientation, Source={x:Static local:SettingsManager.Instance}}" Value="Horizontal">
-                                <Setter Property="ItemsPanel">
-                                    <Setter.Value>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="5"/>
-                                        </ItemsPanelTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </DataTrigger>
                             <DataTrigger Binding="{Binding Current.Orientation, Source={x:Static local:SettingsManager.Instance}}" Value="Vertical">
                                 <Setter Property="ItemsPanel">
                                     <Setter.Value>
@@ -114,16 +96,43 @@
                 </ItemsControl.Style>
             </ItemsControl>
 
-            <!-- Separator -->
-            <Rectangle Grid.Row="1" Height="1" Fill="{DynamicResource App.BorderBrush}" Margin="15,5,15,5" Opacity="0.5"/>
-
-            <!-- Tombol Explorer -->
-            <Button x:Name="OpenInExplorerButton"
-                    Grid.Row="1" 
-                    Content="Open in File Explorer" 
-                    Margin="15,10,15,15"
-                    HorizontalAlignment="Center"
-                    Click="OpenInExplorerButton_Click"/>
+            <!-- Margin pada bagian bawah dikurangi -->
+            <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                <Rectangle Height="1" Fill="{DynamicResource App.BorderBrush}" Margin="8,0,8,8" Opacity="0.5"/>
+                <Button x:Name="OpenInExplorerButton"
+                        Content="Open in File Explorer" 
+                        HorizontalAlignment="Stretch"
+                        Margin="8,0,8,4"
+                        Click="OpenInExplorerButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="{DynamicResource App.HoverBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource App.PrimaryTextBrush}"/>
+                            <!-- PERUBAHAN DI SINI: Padding vertikal ditambah untuk menambah tinggi tombol -->
+                            <Setter Property="Padding" Value="10,10"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Root"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="4">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.HoverBrushInverted}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
         </Grid>
     </Border>
 </mica:MicaWindow>
