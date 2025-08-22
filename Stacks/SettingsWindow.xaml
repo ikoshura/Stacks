@@ -85,21 +85,6 @@
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Header="Theme">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="SystemThemeRadio" Content="System" IsChecked="True" GroupName="Theme" Checked="ThemeRadioButton_Checked"/>
-                        <RadioButton x:Name="LightThemeRadio" Content="Light" GroupName="Theme" Checked="ThemeRadioButton_Checked"/>
-                        <RadioButton x:Name="DarkThemeRadio" Content="Dark" GroupName="Theme" Checked="ThemeRadioButton_Checked"/>
-                    </StackPanel>
-                </GroupBox>
-
-                <GroupBox Header="Appearance">
-                    <StackPanel>
-                        <TextBlock Text="Vertical Offset (Jarak dari Taskbar)"/>
-                        <TextBox x:Name="VerticalOffsetTextBox" Width="80" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                </GroupBox>
-
                 <CheckBox x:Name="StartupCheckBox" Content="Run when Windows starts"/>
             </StackPanel>
 

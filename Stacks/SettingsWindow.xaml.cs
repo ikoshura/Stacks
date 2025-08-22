@@ -17,25 +17,7 @@ namespace Stacks
             var settings = SettingsManager.Current;
 
             SourceFolderTextBox.Text = settings.SourceFolderPath;
-            SystemThemeRadio.IsChecked = settings.Theme == AppTheme.System;
-            LightThemeRadio.IsChecked = settings.Theme == AppTheme.Light;
-            DarkThemeRadio.IsChecked = settings.Theme == AppTheme.Dark;
             StartupCheckBox.IsChecked = settings.RunAtStartup;
-            VerticalOffsetTextBox.Text = settings.VerticalOffset.ToString();
-        }
-
-        private void ThemeRadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-            if (!this.IsLoaded) return;
-
-            AppTheme selectedTheme = AppTheme.System;
-            if (LightThemeRadio.IsChecked == true) selectedTheme = AppTheme.Light;
-            else if (DarkThemeRadio.IsChecked == true) selectedTheme = AppTheme.Dark;
-
-            if (System.Windows.Application.Current is App app)
-            {
-                app.ApplyTheme(selectedTheme);
-            }
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -57,15 +39,7 @@ namespace Stacks
             var settings = SettingsManager.Current;
 
             settings.SourceFolderPath = SourceFolderTextBox.Text;
-            if (SystemThemeRadio.IsChecked == true) settings.Theme = AppTheme.System;
-            else if (LightThemeRadio.IsChecked == true) settings.Theme = AppTheme.Light;
-            else settings.Theme = AppTheme.Dark;
             settings.RunAtStartup = StartupCheckBox.IsChecked == true;
-
-            if (int.TryParse(VerticalOffsetTextBox.Text, out int newOffset))
-            {
-                settings.VerticalOffset = newOffset;
-            }
 
             StartupManager.SetStartup(settings.RunAtStartup);
             SettingsManager.Save();
