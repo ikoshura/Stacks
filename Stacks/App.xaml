@@ -1,12 +1,25 @@
 ﻿<Application x:Class="Stacks.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Stacks">
+             xmlns:local="clr-namespace:Stacks"
+             xmlns:tb="http://www.hardcodet.net/taskbar"
+             ShutdownMode="OnExplicitshutdown">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- THEME DICTIONARY WILL BE INSERTED HERE DYNAMICALLY -->
-            </ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary.MergedDictionaries />
+            <tb:TaskbarIcon
+                x:Key="TrayIcon"
+                IconSource="/Icons/folder.ico"
+                ToolTipText="Stacks"
+                TrayLeftMouseDown="TrayIcon_TrayLeftMouseDown">
+                <tb:TaskbarIcon.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Settings" Click="SettingsMenuItem_Click"/>
+                        <Separator/>
+                        <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+                    </ContextMenu>
+                </tb:TaskbarIcon.ContextMenu>
+            </tb:TaskbarIcon>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

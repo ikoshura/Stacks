@@ -1,76 +1,56 @@
 ﻿using System;
-using System.Windows;
 using Microsoft.Win32;
-
-// Perbaikan: Mendefinisikan alias untuk System.Windows.Point
+using System.Windows;
+using Hardcodet.Wpf.TaskbarNotification;
 using Point = System.Windows.Point;
 
 namespace Stacks
 {
     public partial class App : System.Windows.Application
     {
-        private MainWindow? _mainWindow;
         private FanView? _fanView;
+        private TaskbarIcon? _trayIcon;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
+            _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
             SettingsManager.Load();
             ApplyTheme(SettingsManager.Current.Theme);
-
-            _mainWindow = new MainWindow();
             _fanView = new FanView();
-
-            _fanView.Deactivated += FanView_Deactivated;
-
-            _mainWindow.Show();
-            _mainWindow.WidgetClicked += OnWidgetClicked;
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
 
-        // PERBAIKAN UTAMA DAN FINAL ADA DI SINI
-        private void FanView_Deactivated(object sender, EventArgs e)
+        private void TrayIcon_TrayLeftMouseDown(object sender, RoutedEventArgs e)
         {
-            // Jika deaktivasi terjadi karena mouse berada di atas widget utama,
-            // berarti OnWidgetClicked akan menangani logika buka/tutup.
-            // Oleh karena itu, kita tidak melakukan apa-apa di sini untuk mencegah penutupan ganda.
-            if (_mainWindow != null && _mainWindow.IsMouseOver)
+            if (_fanView != null)
             {
-                return;
-            }
-
-            // Jika mouse tidak di atas widget, berarti pengguna mengklik di tempat lain.
-            // Dalam kasus ini, kita sembunyikan jendela pop-up.
-            _fanView?.Hide();
-        }
-
-        // Logika ini sekarang dapat berjalan tanpa gangguan
-        private void OnWidgetClicked()
-        {
-            if (_fanView == null || _mainWindow == null) return;
-
-            if (_fanView.IsVisible)
-            {
-                _fanView.Hide();
-            }
-            else
-            {
-                Point widgetPosition = _mainWindow.PointToScreen(new Point(0, 0));
-                _fanView.ShowAt(widgetPosition, _mainWindow.ActualWidth);
+                if (_fanView.IsVisible)
+                {
+                    _fanView.Hide();
+                }
+                else
+                {
+                    var cursorPosition = GetMousePosition();
+                    _fanView.ShowAt(cursorPosition);
+                }
             }
         }
 
+        #region Kode Lengkap Lainnya (Tidak Berubah)
+        private void SettingsMenuItem_Click(object sender, RoutedEventArgs e) { new SettingsWindow().ShowDialog(); }
+        private void ExitMenuItem_Click(object sender, RoutedEventArgs e) { Shutdown(); }
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _trayIcon?.Dispose();
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+            base.OnExit(e);
+        }
         public void ApplyTheme(AppTheme theme)
         {
             ResourceDictionary? themeDictionary = null;
             var currentTheme = GetCurrentSystemTheme();
-
-            if (theme == AppTheme.System)
-            {
-                theme = currentTheme;
-            }
-
+            if (theme == AppTheme.System) theme = currentTheme;
             switch (theme)
             {
                 case AppTheme.Light:
@@ -80,45 +60,41 @@ namespace Stacks
                     themeDictionary = new ResourceDictionary { Source = new Uri("Themes/DarkTheme.xaml", UriKind.Relative) };
                     break;
             }
-
             if (themeDictionary != null)
             {
-                var mergedDictionaries = Resources.MergedDictionaries;
-                mergedDictionaries.Clear();
-                mergedDictionaries.Add(new ResourceDictionary { Source = new Uri("Themes/ModernStyles.xaml", UriKind.Relative) });
-                mergedDictionaries.Add(themeDictionary);
+                Resources.MergedDictionaries.Clear();
+                Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("Themes/ModernStyles.xaml", UriKind.Relative) });
+                Resources.MergedDictionaries.Add(themeDictionary);
             }
         }
-
         private AppTheme GetCurrentSystemTheme()
         {
             try
             {
-                const string registryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-                const string registryValueName = "AppsUseLightTheme";
-                using var key = Registry.CurrentUser.OpenSubKey(registryKeyPath);
-                var registryValue = key?.GetValue(registryValueName);
-
-                return (registryValue is int value && value == 0) ? AppTheme.Dark : AppTheme.Light;
+                const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+                using var key = Registry.CurrentUser.OpenSubKey(keyPath);
+                var value = key?.GetValue("AppsUseLightTheme");
+                return (value is int v && v == 0) ? AppTheme.Dark : AppTheme.Light;
             }
-            catch
-            {
-                return AppTheme.Light;
-            }
+            catch { return AppTheme.Light; }
         }
-
         private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
         {
             if (e.Category == UserPreferenceCategory.General && SettingsManager.Current.Theme == AppTheme.System)
             {
-                ApplyTheme(AppTheme.System);
+                Dispatcher.Invoke(() => ApplyTheme(AppTheme.System));
             }
         }
-
-        protected override void OnExit(ExitEventArgs e)
+        private Point GetMousePosition()
         {
-            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
-            base.OnExit(e);
+            GetCursorPos(out Win32Point w32Mouse);
+            return new Point(w32Mouse.X, w32Mouse.Y);
         }
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        internal static extern bool GetCursorPos(out Win32Point pt);
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        internal struct Win32Point { public Int32 X; public Int32 Y; };
+        #endregion
     }
 }

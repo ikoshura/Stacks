@@ -10,15 +10,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Icons\folder.ico" />
 		<None Remove="Icons\folder.png" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
 		<PackageReference Include="MicaWPF" Version="6.3.0" />
 		<PackageReference Include="Microsoft.WindowsAPICodePack-Shell" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Include="Icons\folder.ico">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 		<Resource Include="Icons\folder.png" />
 		<Resource Include="Icons\icon-light.png" />
 		<Resource Include="Icons\icon-dark.png" />

@@ -8,83 +8,70 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Interop;
-
-// Perbaikan: Mendefinisikan alias untuk menghindari konflik
 using Point = System.Windows.Point;
-using Icon = System.Drawing.Icon;
 
 namespace Stacks
 {
     public partial class FanView : MicaWPF.Controls.MicaWindow
     {
         public ObservableCollection<FileItem> Files { get; set; }
-
         private bool _isFirstTimeShowing = true;
-        private Point _currentTargetPosition;
-        private double _currentTargetWidth;
 
         public FanView()
         {
             InitializeComponent();
             Files = new ObservableCollection<FileItem>();
             FileItemsControl.ItemsSource = Files;
+            // Konstruktor ini sekarang bersih dari semua logika penutupan otomatis.
+            this.Deactivated += (sender, e) => this.Hide();
         }
 
-        public void ShowAt(Point widgetPosition, double widgetWidth)
+        // *** EVENT HANDLER UNTUK TOMBOL CLOSE BARU ***
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            _currentTargetPosition = widgetPosition;
-            _currentTargetWidth = widgetWidth;
+            this.Hide();
+        }
 
+        public void ShowAt(Point cursorPosition)
+        {
             LoadFiles();
             this.DataContext = SettingsManager.Instance;
-
             if (_isFirstTimeShowing)
             {
                 this.WindowStartupLocation = WindowStartupLocation.Manual;
                 this.ShowActivated = false;
                 this.Show();
                 this.Hide();
-
                 this.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    PositionWindow();
+                    PositionWindow(cursorPosition);
                     this.Show();
+                    this.Activate();
                     _isFirstTimeShowing = false;
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
             else
             {
-                PositionWindow();
+                PositionWindow(cursorPosition);
                 this.Show();
+                this.Activate();
             }
-
-            this.Activate();
         }
 
-        private void PositionWindow()
+        #region Kode Lengkap Lainnya (Tidak Berubah)
+        private void PositionWindow(Point cursorPosition)
         {
             var workArea = SystemParameters.WorkArea;
-            // PERUBAHAN DI SINI: Menambahkan konstanta untuk jarak dari tepi layar
             const double screenMargin = 12.0;
-
-            // Kalkulasi posisi tengah horizontal
-            this.Left = _currentTargetPosition.X + (_currentTargetWidth / 2) - (this.ActualWidth / 2);
-            // Kalkulasi posisi atas
-            this.Top = _currentTargetPosition.Y - this.ActualHeight - SettingsManager.Current.VerticalOffset;
-
-            // Jika posisi terlalu ke atas (misalnya taskbar di atas), pindahkan ke bawah
-            if (this.Top < workArea.Top)
-                this.Top = _currentTargetPosition.Y + 40;
-
-            // PERUBAHAN DI SINI: Memeriksa batas layar dengan menambahkan margin
-            // Jika jendela terlalu ke kiri, atur posisinya dengan jarak dari tepi kiri
-            if (this.Left < workArea.Left)
-                this.Left = workArea.Left + screenMargin;
-
-            // Jika jendela terlalu ke kanan, atur posisinya dengan jarak dari tepi kanan
-            if (this.Left + this.ActualWidth > workArea.Right)
-                this.Left = workArea.Right - this.ActualWidth - screenMargin;
+            this.UpdateLayout();
+            double left = cursorPosition.X - 10;
+            double top = cursorPosition.Y - this.ActualHeight - 10;
+            if (left + this.ActualWidth > workArea.Right) left = workArea.Right - this.ActualWidth - screenMargin;
+            if (left < workArea.Left) left = workArea.Left + screenMargin;
+            if (top < workArea.Top) top = cursorPosition.Y + 10;
+            if (top + this.ActualHeight > workArea.Bottom) top = workArea.Bottom - this.ActualHeight - screenMargin;
+            this.Left = left;
+            this.Top = top;
         }
 
         private async void LoadFiles()
@@ -93,21 +80,11 @@ namespace Stacks
             {
                 string sourcePath = SettingsManager.Current.SourceFolderPath;
                 if (!Directory.Exists(sourcePath)) { Files.Clear(); return; }
-
-                var filePaths = await Task.Run(() =>
-                    Directory.GetFiles(sourcePath)
-                             .OrderByDescending(f => new FileInfo(f).LastWriteTime)
-                             .Take(10).ToList());
-
+                var filePaths = await Task.Run(() => Directory.GetFiles(sourcePath).OrderByDescending(f => new FileInfo(f).LastWriteTime).Take(10).ToList());
                 Files.Clear();
                 foreach (var path in filePaths)
                 {
-                    Files.Add(new FileItem
-                    {
-                        FilePath = path,
-                        FileName = Path.GetFileName(path),
-                        Thumbnail = CreateThumbnail(path)
-                    });
+                    Files.Add(new FileItem { FilePath = path, FileName = Path.GetFileName(path), Thumbnail = CreateThumbnail(path) });
                 }
             }
             catch (Exception ex)
@@ -133,26 +110,20 @@ namespace Stacks
             {
                 try
                 {
-                    // PERBAIKAN: Memanggil method dari kelas Icon yang benar
-                    using (Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(filePath))
+                    using (System.Drawing.Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(filePath))
                     {
-                        return Imaging.CreateBitmapSourceFromHIcon(
-                            icon.Handle,
-                            Int32Rect.Empty,
-                            BitmapSizeOptions.FromEmptyOptions());
+                        return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                     }
                 }
                 catch { return null; }
             }
         }
 
-        // PERBAIKAN: Spesifikasikan System.Windows.Input.MouseEventArgs
         private void File_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element)
             {
-                var fileItem = element.DataContext as FileItem;
-                if (fileItem != null && fileItem.FilePath != null)
+                if (element.DataContext is FileItem fileItem && fileItem.FilePath != null)
                 {
                     var data = new System.Windows.DataObject(System.Windows.DataFormats.FileDrop, new string[] { fileItem.FilePath });
                     System.Windows.DragDrop.DoDragDrop(element, data, System.Windows.DragDropEffects.Copy);
@@ -160,33 +131,27 @@ namespace Stacks
             }
         }
 
-        // PERBAIKAN: Spesifikasikan System.Windows.Input.MouseButtonEventArgs
-        private void File_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void File_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (sender is FrameworkElement element && element.IsMouseOver)
+            if (sender is FrameworkElement { IsMouseOver: true, DataContext: FileItem fileItem } && !string.IsNullOrEmpty(fileItem.FilePath))
             {
-                var fileItem = element.DataContext as FileItem;
-                if (fileItem != null && !string.IsNullOrEmpty(fileItem.FilePath))
+                try
                 {
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo(fileItem.FilePath) { UseShellExecute = true });
-                        this.Hide();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Windows.MessageBox.Show("Cannot open file: " + ex.Message);
-                    }
+                    Process.Start(new ProcessStartInfo(fileItem.FilePath) { UseShellExecute = true });
+                    this.Hide();
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show("Cannot open file: " + ex.Message);
                 }
             }
         }
 
         private void OpenInExplorerButton_Click(object sender, RoutedEventArgs e)
         {
-            string sourcePath = SettingsManager.Current.SourceFolderPath;
             try
             {
-                Process.Start("explorer.exe", sourcePath);
+                Process.Start("explorer.exe", SettingsManager.Current.SourceFolderPath);
                 this.Hide();
             }
             catch (Exception ex)
@@ -194,5 +159,6 @@ namespace Stacks
                 System.Windows.MessageBox.Show("Cannot open File Explorer: " + ex.Message);
             }
         }
+        #endregion
     }
 }
