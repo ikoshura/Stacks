@@ -1,30 +1,85 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls;
+﻿// FILE: Stacks/SettingsWindow.xaml.cs
+
 using Microsoft.WindowsAPICodePack.Dialogs;
-using System.Drawing; // For Rectangle, Point
-using System.Windows.Forms; // For NotifyIcon, MouseButtons
-using System.Windows.Media; // For VisualTreeHelper (WPF)
-using System.Reflection;
+using System;
+using System.Windows;
+// PERBAIKAN: Tambahkan using eksplisit untuk System.Windows.Controls
+using System.Windows.Controls;
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+using Point = System.Windows.Point;
 
 namespace Stacks
 {
-    public partial class SettingsWindow : MicaWPF.Controls.MicaWindow
+    public partial class SettingsWindow : FluentWindow
     {
+        private Point? _initialPosition;
+        private bool _isClosing = false;
+
         public SettingsWindow()
         {
             InitializeComponent();
-            LoadSettingsToUI();
 
-            this.WindowStartupLocation = WindowStartupLocation.Manual;
+            this.Deactivated += (s, e) =>
+            {
+                if (!_isClosing)
+                {
+                    this.Close();
+                }
+            };
+
+            this.Loaded += SettingsWindow_Loaded;
+        }
+
+        public void ShowAt(Point cursorPosition)
+        {
+            _initialPosition = cursorPosition;
+            this.Show();
+            this.Activate();
+        }
+
+        private void Border_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+                this.DragMove();
+        }
+
+
+        private void SettingsWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_initialPosition.HasValue)
+            {
+                PositionWindow(_initialPosition.Value);
+            }
+            LoadSettingsToUI();
+        }
+
+        private void PositionWindow(Point cursorPosition)
+        {
+            var workArea = SystemParameters.WorkArea;
+            const double screenMargin = 12.0;
+
+            this.UpdateLayout();
+
+            double left = cursorPosition.X - (this.ActualWidth / 2);
+            double top = cursorPosition.Y - this.ActualHeight - 20;
+
+            if (left + this.ActualWidth > workArea.Right) left = workArea.Right - this.ActualWidth - screenMargin;
+            if (left < workArea.Left) left = workArea.Left + screenMargin;
+            if (top < workArea.Top) top = workArea.Top + screenMargin;
+            if (top + this.ActualHeight > workArea.Bottom) top = workArea.Bottom - this.ActualHeight - screenMargin;
+
+            this.Left = left;
+            this.Top = top;
         }
 
         private void LoadSettingsToUI()
         {
             var settings = SettingsManager.Current;
-
-            SourceFolderTextBox.Text = settings.SourceFolderPath;
-            StartupCheckBox.IsChecked = settings.RunAtStartup;
+            SourceFolderTextBlock.Text = settings.SourceFolderPath;
+            StartupToggleButton.IsChecked = settings.RunAtStartup;
+            ThemeComboBox.SelectedIndex = (int)settings.Theme;
+            BackdropToggleButton.IsChecked = settings.UseAcrylic;
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -32,83 +87,66 @@ namespace Stacks
             var dialog = new CommonOpenFileDialog
             {
                 IsFolderPicker = true,
-                InitialDirectory = SourceFolderTextBox.Text
+                InitialDirectory = SourceFolderTextBlock.Text
             };
 
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                SourceFolderTextBox.Text = dialog.FileName;
+                SourceFolderTextBlock.Text = dialog.FileName;
             }
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            var settings = SettingsManager.Current;
+            _isClosing = true;
 
-            settings.SourceFolderPath = SourceFolderTextBox.Text;
-            settings.RunAtStartup = StartupCheckBox.IsChecked == true;
+            var settings = SettingsManager.Current;
+            settings.SourceFolderPath = SourceFolderTextBlock.Text;
+            settings.RunAtStartup = StartupToggleButton.IsChecked == true;
+            settings.Theme = (AppTheme)ThemeComboBox.SelectedIndex;
+            settings.UseAcrylic = BackdropToggleButton.IsChecked == true;
 
             StartupManager.SetStartup(settings.RunAtStartup);
             SettingsManager.Save();
 
-            this.DialogResult = true;
+            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
+            if (System.Windows.Application.Current is App app)
+            {
+                app.ApplyTheme(settings.Theme);
+            }
+
             this.Close();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if (System.Windows.Application.Current is App app)
-            {
-                app.ApplyTheme(SettingsManager.Current.Theme);
-            }
-            this.DialogResult = false;
+            _isClosing = true;
             this.Close();
         }
 
-        /// <summary>
-        /// Show the settings window near the tray icon, instead of (0,0).
-        /// </summary>
-        public void ShowNearTray(NotifyIcon trayIcon)
+        private void ThemeComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (trayIcon == null)
+            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
+            if (sender is not System.Windows.Controls.ComboBox { IsLoaded: true } comboBox) return;
+
+            var selectedTheme = (AppTheme)comboBox.SelectedIndex;
+            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
+            if (System.Windows.Application.Current is App app)
             {
-                this.Show();
-                return;
+                app.ApplyTheme(selectedTheme);
             }
+        }
 
-            // Use reflection to get the NotifyIcon bounds (tray position)
-            Rectangle trayBounds = Rectangle.Empty;
-            try
-            {
-                var fi = trayIcon.GetType().GetProperty("Bounds", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (fi != null)
-                {
-                    trayBounds = (Rectangle)fi.GetValue(trayIcon);
-                }
-            }
-            catch
-            {
-                // fallback to mouse position
-                trayBounds = new Rectangle(System.Windows.Forms.Control.MousePosition, new System.Drawing.Size(1, 1));
-            }
+        private void BackdropToggleButton_OnChecked(object sender, RoutedEventArgs e)
+        {
+            if (this.IsLoaded)
+                WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Acrylic);
+        }
 
-            if (trayBounds == Rectangle.Empty)
-            {
-                trayBounds = new Rectangle(System.Windows.Forms.Control.MousePosition, new System.Drawing.Size(1, 1));
-            }
-
-            // Get DPI scaling for correct positioning
-            var dpi = VisualTreeHelper.GetDpi(this);
-
-            double screenX = trayBounds.X / dpi.DpiScaleX;
-            double screenY = trayBounds.Y / dpi.DpiScaleY;
-
-            // Position window just above tray icon
-            this.Left = screenX - (this.Width / 2);
-            this.Top = screenY - this.Height - 10;
-
-            this.Show();
-            this.Activate();
+        private void BackdropToggleButton_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            if (this.IsLoaded)
+                WindowBackdrop.RemoveBackdrop(this);
         }
     }
 }

@@ -10,49 +10,36 @@
         ResizeMode="NoResize"
         Topmost="True">
     <Grid>
+        <!-- *** PERUBAHAN DEBUGGING 1: Background="Red" ditambahkan untuk visibilitas *** -->
         <Button x:Name="WidgetButton"
                 ToolTip="Open Stacks"
                 BorderThickness="0"
-                Background="Transparent"
-                Cursor="Hand">
+                Cursor="Hand"
+                Background="Red">
 
             <!-- Style mirip tombol taskbar Win11 -->
             <Button.Style>
                 <Style TargetType="Button">
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="BorderBrush" Value="Transparent"/>
                     <Setter Property="Padding" Value="0"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="Button">
                                 <Grid>
-                                    <!-- Background overlay untuk hover/pressed -->
                                     <Border x:Name="Overlay"
-                                            Background="Transparent"
+                                            Background="{TemplateBinding Background}" 
                                             CornerRadius="8"/>
                                     <ContentPresenter HorizontalAlignment="Center"
                                                       VerticalAlignment="Center"/>
                                 </Grid>
                                 <ControlTemplate.Triggers>
-                                    <!-- Hover -->
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Overlay"
-                                                Property="Background"
-                                                Value="#10ffffff"/>
-                                        <!-- abu gelap -->
+                                        <Setter TargetName="Overlay" Property="Background" Value="#10ffffff"/>
                                     </Trigger>
-                                    <!-- Pressed -->
                                     <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="Overlay"
-                                                Property="Background"
-                                                Value="#08ffffff"/>
-                                        <!-- lebih gelap -->
+                                        <Setter TargetName="Overlay" Property="Background" Value="#08ffffff"/>
                                     </Trigger>
-                                    <!-- Disabled -->
                                     <Trigger Property="IsEnabled" Value="False">
-                                        <Setter TargetName="Overlay"
-                                                Property="Background"
-                                                Value="Transparent"/>
+                                        <Setter TargetName="Overlay" Property="Background" Value="Transparent"/>
                                         <Setter Property="Opacity" Value="0.4"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>

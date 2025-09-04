@@ -17,13 +17,14 @@
 
 	<ItemGroup>
 		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-		<PackageReference Include="MicaWPF" Version="6.3.0" />
+		<!-- PERUBAHAN: Ganti MicaWPF dengan Wpf.Ui -->
 		<PackageReference Include="Microsoft.WindowsAPICodePack-Shell" Version="1.1.0" />
+		<PackageReference Include="WPF-UI" Version="4.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="Icons\folder.ico">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Icons\folder.png" />
 		<Resource Include="Icons\icon-light.png" />

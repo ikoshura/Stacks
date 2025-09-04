@@ -1,4 +1,6 @@
-﻿using System;
+﻿// FILE: Stacks/FanView.xaml.cs
+
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -9,10 +11,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Point = System.Windows.Point;
+// PERUBAHAN: Mengganti using dari MicaWPF ke Wpf.Ui
+using Wpf.Ui.Controls;
 
 namespace Stacks
 {
-    public partial class FanView : MicaWPF.Controls.MicaWindow
+    // PERUBAHAN: Mengganti kelas dasar dari MicaWindow ke FluentWindow
+    public partial class FanView : FluentWindow
     {
         public ObservableCollection<FileItem> Files { get; set; }
         private bool _isFirstTimeShowing = true;
@@ -22,11 +27,9 @@ namespace Stacks
             InitializeComponent();
             Files = new ObservableCollection<FileItem>();
             FileItemsControl.ItemsSource = Files;
-            // Konstruktor ini sekarang bersih dari semua logika penutupan otomatis.
             this.Deactivated += (sender, e) => this.Hide();
         }
 
-        // *** EVENT HANDLER UNTUK TOMBOL CLOSE BARU ***
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             this.Hide();
