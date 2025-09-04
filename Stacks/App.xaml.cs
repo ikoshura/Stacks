@@ -1,4 +1,6 @@
-﻿using System;
+﻿// FILE: Stacks/App.xaml.cs
+
+using System;
 using Microsoft.Win32;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -31,15 +33,9 @@ namespace Stacks
         {
             if (_fanView is null) return;
 
-            if (_fanView.IsVisible)
-            {
-                _fanView.Hide();
-            }
-            else
-            {
-                var cursorPosition = GetMousePosition();
-                _fanView.ShowAt(cursorPosition);
-            }
+            // PERUBAHAN UTAMA: Gunakan method ToggleAt yang baru untuk menangani logika buka/tutup
+            var cursorPosition = GetMousePosition();
+            _fanView.ToggleAt(cursorPosition);
         }
 
         private void SettingsMenuItem_Click(object sender, RoutedEventArgs e)

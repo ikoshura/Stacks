@@ -15,7 +15,7 @@
     ShowInTaskbar="False"
     Topmost="True"
     ExtendsContentIntoTitleBar="True"
-    WindowBackdropType="Acrylic"
+    WindowBackdropType="Mica"
     WindowCornerPreference="Round">
 
     <!-- Transparent supaya Mica jalan -->
@@ -24,7 +24,8 @@
     </ui:FluentWindow.Background>
 
     <!-- Border semi-transparan supaya efek Mica kelihatan -->
-    <Border Background="#77000000"
+    <Border x:Name="RootBorder"
+            Background="Transparent"
             CornerRadius="8" 
             BorderThickness="1" 
             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"

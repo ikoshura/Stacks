@@ -11,22 +11,21 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Point = System.Windows.Point;
-// PERUBAHAN: Mengganti using dari MicaWPF ke Wpf.Ui
+using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
 namespace Stacks
 {
-    // PERUBAHAN: Mengganti kelas dasar dari MicaWindow ke FluentWindow
     public partial class FanView : FluentWindow
     {
         public ObservableCollection<FileItem> Files { get; set; }
-        private bool _isFirstTimeShowing = true;
 
         public FanView()
         {
             InitializeComponent();
             Files = new ObservableCollection<FileItem>();
             FileItemsControl.ItemsSource = Files;
+            // Langsung sembunyikan jendela saat tidak aktif (kehilangan fokus)
             this.Deactivated += (sender, e) => this.Hide();
         }
 
@@ -35,37 +34,50 @@ namespace Stacks
             this.Hide();
         }
 
-        public void ShowAt(Point cursorPosition)
+        // Method publik untuk mengontrol visibilitas secara instan
+        public void ToggleAt(Point cursorPosition)
         {
-            LoadFiles();
-            this.DataContext = SettingsManager.Instance;
-            if (_isFirstTimeShowing)
+            if (this.IsVisible)
             {
-                this.WindowStartupLocation = WindowStartupLocation.Manual;
-                this.ShowActivated = false;
-                this.Show();
                 this.Hide();
-                this.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    PositionWindow(cursorPosition);
-                    this.Show();
-                    this.Activate();
-                    _isFirstTimeShowing = false;
-                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
             else
             {
-                PositionWindow(cursorPosition);
-                this.Show();
-                this.Activate();
+                ShowAt(cursorPosition);
             }
         }
 
-        #region Kode Lengkap Lainnya (Tidak Berubah)
-        private void PositionWindow(Point cursorPosition)
+        private void ShowAt(Point cursorPosition)
+        {
+            // Muat file terbaru
+            LoadFiles();
+            this.DataContext = SettingsManager.Instance;
+
+            // Pastikan efek visual (akrilik) diterapkan sesuai pengaturan
+            if (SettingsManager.Current.UseAcrylic)
+            {
+                WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Mica);
+            }
+            else
+            {
+                WindowBackdrop.RemoveBackdrop(this);
+            }
+
+            // Hitung posisi final dan langsung tempatkan jendela di sana
+            Point finalPos = CalculateWindowPosition(cursorPosition);
+            this.Left = finalPos.X;
+            this.Top = finalPos.Y;
+
+            // Tampilkan jendela dan berikan fokus
+            this.Show();
+            this.Activate();
+        }
+
+        private Point CalculateWindowPosition(Point cursorPosition)
         {
             var workArea = SystemParameters.WorkArea;
             const double screenMargin = 12.0;
+            // Paksa pembaruan layout untuk mendapatkan ActualWidth dan ActualHeight yang benar
             this.UpdateLayout();
             double left = cursorPosition.X - 10;
             double top = cursorPosition.Y - this.ActualHeight - 10;
@@ -73,10 +85,10 @@ namespace Stacks
             if (left < workArea.Left) left = workArea.Left + screenMargin;
             if (top < workArea.Top) top = cursorPosition.Y + 10;
             if (top + this.ActualHeight > workArea.Bottom) top = workArea.Bottom - this.ActualHeight - screenMargin;
-            this.Left = left;
-            this.Top = top;
+            return new Point(left, top);
         }
 
+        #region Kode Lengkap Lainnya (Tidak Berubah)
         private async void LoadFiles()
         {
             try

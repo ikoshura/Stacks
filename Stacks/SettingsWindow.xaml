@@ -13,7 +13,7 @@
     SizeToContent="Height"
     WindowStartupLocation="Manual"
     ExtendsContentIntoTitleBar="True"
-    WindowBackdropType="Acrylic"
+    WindowBackdropType="Mica"
     WindowCornerPreference="Round"
     WindowStyle="None"
     ResizeMode="NoResize">
@@ -27,7 +27,7 @@
         <!-- Border gelap translucent -->
         <Border Margin="0"
                 Padding="16"
-                Background="#77000000"
+                Background="Transparent"
                 CornerRadius="8"
                 BorderThickness="1"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
