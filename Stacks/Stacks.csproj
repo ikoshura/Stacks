@@ -17,7 +17,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-		<!-- PERUBAHAN: Ganti MicaWPF dengan Wpf.Ui -->
+		<!-- PERUBAHAN: Ganti WPF-UI dengan MicaWPF.Lite -->
+		<PackageReference Include="MicaWPF.Lite" Version="1.0.1" />
 		<PackageReference Include="Microsoft.WindowsAPICodePack-Shell" Version="1.1.0" />
 		<PackageReference Include="WPF-UI" Version="4.0.3" />
 	</ItemGroup>

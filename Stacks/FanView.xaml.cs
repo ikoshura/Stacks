@@ -19,41 +19,49 @@ namespace Stacks
     public partial class FanView : FluentWindow
     {
         public ObservableCollection<FileItem> Files { get; set; }
+        private bool _isFirstLoad = true;
+        public event Action? ViewDeactivated;
 
         public FanView()
         {
             InitializeComponent();
             Files = new ObservableCollection<FileItem>();
             FileItemsControl.ItemsSource = Files;
-            // Langsung sembunyikan jendela saat tidak aktif (kehilangan fokus)
-            this.Deactivated += (sender, e) => this.Hide();
+            this.Deactivated += OnDeactivated;
+        }
+
+        private void OnDeactivated(object? sender, EventArgs e)
+        {
+            this.Hide();
+            ViewDeactivated?.Invoke();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             this.Hide();
+            ViewDeactivated?.Invoke();
         }
 
-        // Method publik untuk mengontrol visibilitas secara instan
-        public void ToggleAt(Point cursorPosition)
+        public async void ToggleAt(Point cursorPosition)
         {
             if (this.IsVisible)
             {
                 this.Hide();
+                ViewDeactivated?.Invoke();
             }
             else
             {
-                ShowAt(cursorPosition);
+                await ShowAt(cursorPosition);
             }
         }
 
-        private void ShowAt(Point cursorPosition)
+        public async Task ShowAt(Point cursorPosition)
         {
-            // Muat file terbaru
-            LoadFiles();
+            // 1. Muat file terlebih dahulu agar konten siap diukur
+            await LoadFiles();
+
             this.DataContext = SettingsManager.Instance;
 
-            // Pastikan efek visual (akrilik) diterapkan sesuai pengaturan
             if (SettingsManager.Current.UseAcrylic)
             {
                 WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Mica);
@@ -63,12 +71,32 @@ namespace Stacks
                 WindowBackdrop.RemoveBackdrop(this);
             }
 
-            // Hitung posisi final dan langsung tempatkan jendela di sana
+            // PERBAIKAN: Logika untuk mengunci ukuran setelah pengukuran pertama
+            if (_isFirstLoad)
+            {
+                // Tampilkan di luar layar untuk diukur sesuai konten yang sudah dimuat
+                this.Opacity = 0;
+                this.Left = -9999;
+                this.Show();
+                this.UpdateLayout();
+
+                // Kunci ukuran jendela berdasarkan hasil pengukuran
+                this.Width = this.ActualWidth;
+                this.Height = this.ActualHeight;
+
+                // SANGAT PENTING: Matikan SizeToContent agar jendela tidak lagi meresize
+                this.SizeToContent = SizeToContent.Manual;
+
+                // Sembunyikan dan siapkan untuk ditampilkan di posisi yang benar
+                this.Hide();
+                this.Opacity = 1;
+                _isFirstLoad = false;
+            }
+
             Point finalPos = CalculateWindowPosition(cursorPosition);
             this.Left = finalPos.X;
             this.Top = finalPos.Y;
 
-            // Tampilkan jendela dan berikan fokus
             this.Show();
             this.Activate();
         }
@@ -77,25 +105,28 @@ namespace Stacks
         {
             var workArea = SystemParameters.WorkArea;
             const double screenMargin = 12.0;
-            // Paksa pembaruan layout untuk mendapatkan ActualWidth dan ActualHeight yang benar
-            this.UpdateLayout();
+            // Ukuran sudah tetap, jadi tidak perlu UpdateLayout() lagi di sini.
             double left = cursorPosition.X - 10;
-            double top = cursorPosition.Y - this.ActualHeight - 10;
-            if (left + this.ActualWidth > workArea.Right) left = workArea.Right - this.ActualWidth - screenMargin;
+            double top = cursorPosition.Y - this.Height - 10; // Gunakan Height yang sudah terkunci
+
+            if (left + this.Width > workArea.Right) left = workArea.Right - this.Width - screenMargin;
             if (left < workArea.Left) left = workArea.Left + screenMargin;
             if (top < workArea.Top) top = cursorPosition.Y + 10;
-            if (top + this.ActualHeight > workArea.Bottom) top = workArea.Bottom - this.ActualHeight - screenMargin;
+            if (top + this.Height > workArea.Bottom) top = workArea.Bottom - this.Height - screenMargin;
+
             return new Point(left, top);
         }
 
-        #region Kode Lengkap Lainnya (Tidak Berubah)
-        private async void LoadFiles()
+        // ... Sisa kode tidak berubah ...
+        private async Task LoadFiles()
         {
             try
             {
                 string sourcePath = SettingsManager.Current.SourceFolderPath;
                 if (!Directory.Exists(sourcePath)) { Files.Clear(); return; }
+
                 var filePaths = await Task.Run(() => Directory.GetFiles(sourcePath).OrderByDescending(f => new FileInfo(f).LastWriteTime).Take(10).ToList());
+
                 Files.Clear();
                 foreach (var path in filePaths)
                 {
@@ -154,6 +185,7 @@ namespace Stacks
                 {
                     Process.Start(new ProcessStartInfo(fileItem.FilePath) { UseShellExecute = true });
                     this.Hide();
+                    ViewDeactivated?.Invoke();
                 }
                 catch (Exception ex)
                 {
@@ -168,12 +200,12 @@ namespace Stacks
             {
                 Process.Start("explorer.exe", SettingsManager.Current.SourceFolderPath);
                 this.Hide();
+                ViewDeactivated?.Invoke();
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show("Cannot open File Explorer: " + ex.Message);
             }
         }
-        #endregion
     }
 }

@@ -10,11 +10,11 @@ using Wpf.Ui.Controls;
 
 namespace Stacks
 {
-    // PERBAIKAN: Tentukan secara eksplisit untuk menghindari ambiguitas
     public partial class App : System.Windows.Application
     {
         private FanView? _fanView;
         private TaskbarIcon? _trayIcon;
+        private MainWindow? _mainWindow;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -23,19 +23,32 @@ namespace Stacks
 
             SettingsManager.Load();
             ApplyTheme(SettingsManager.Current.Theme);
-            _fanView = new FanView();
 
-            // PERBAIKAN: Menggunakan SystemEvents untuk mendeteksi perubahan tema sistem, ini lebih baik untuk aplikasi tray
+            _mainWindow = new MainWindow();
+            _mainWindow.Show();
+
+            _fanView = new FanView();
+            _fanView.ViewDeactivated += OnFanViewDeactivated;
+
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        }
+
+        private void OnFanViewDeactivated()
+        {
+            if (_mainWindow != null)
+            {
+                _mainWindow.IsFanViewOpen = false;
+            }
         }
 
         private void TrayIcon_TrayLeftMouseDown(object sender, RoutedEventArgs e)
         {
-            if (_fanView is null) return;
+            if (_fanView is null || _mainWindow is null) return;
 
-            // PERUBAHAN UTAMA: Gunakan method ToggleAt yang baru untuk menangani logika buka/tutup
             var cursorPosition = GetMousePosition();
             _fanView.ToggleAt(cursorPosition);
+
+            _mainWindow.IsFanViewOpen = _fanView.IsVisible;
         }
 
         private void SettingsMenuItem_Click(object sender, RoutedEventArgs e)
@@ -58,7 +71,7 @@ namespace Stacks
         protected override void OnExit(ExitEventArgs e)
         {
             _trayIcon?.Dispose();
-            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged; // Hapus langganan saat keluar
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             base.OnExit(e);
         }
 
@@ -74,7 +87,6 @@ namespace Stacks
             ApplicationThemeManager.Apply(themeToApply);
         }
 
-        // PERBAIKAN: Mengembalikan metode ini untuk menangani perubahan tema OS
         private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
         {
             if (e.Category == UserPreferenceCategory.General && SettingsManager.Current.Theme == AppTheme.System)

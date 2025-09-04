@@ -11,6 +11,7 @@
     
     Title="FanView"
     SizeToContent="WidthAndHeight"
+    ResizeMode="NoResize"
     WindowStyle="None"
     ShowInTaskbar="False"
     Topmost="True"
@@ -23,7 +24,6 @@
         <SolidColorBrush Color="Transparent"/>
     </ui:FluentWindow.Background>
 
-    <!-- Border semi-transparan supaya efek Mica kelihatan -->
     <Border x:Name="RootBorder"
             Background="Transparent"
             CornerRadius="8" 
@@ -33,7 +33,7 @@
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -79,7 +79,7 @@
                         <Setter Property="ItemsPanel">
                             <Setter.Value>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Columns="5"/>
+                                    <WrapPanel MaxWidth="440" />
                                 </ItemsPanelTemplate>
                             </Setter.Value>
                         </Setter>
@@ -112,7 +112,7 @@
                            Content="Close"
                            Appearance="Secondary"
                            HorizontalAlignment="Stretch"
-                           Margin="8,4,8,4"
+                           Margin="8,4,8,-30"
                            Click="CloseButton_Click"/>
             </StackPanel>
         </Grid>
