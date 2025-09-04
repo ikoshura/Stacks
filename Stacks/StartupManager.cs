@@ -1,14 +1,16 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Reflection;
-using System.Windows;
 
 namespace Stacks
 {
     public static class StartupManager
     {
         private const string AppName = "Stacks";
-        private static readonly string? AppPath = Assembly.GetExecutingAssembly().Location;
+        private static readonly string AppPath =
+            Assembly.GetEntryAssembly()?.Location ??
+            Process.GetCurrentProcess().MainModule.FileName;
 
         public static void SetStartup(bool enable)
         {
@@ -16,7 +18,7 @@ namespace Stacks
 
             try
             {
-                using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+                using var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
                 if (key == null) return;
 
                 if (enable)
@@ -30,7 +32,6 @@ namespace Stacks
             }
             catch (Exception ex)
             {
-                // PERBAIKAN: Nama lengkap untuk MessageBox
                 System.Windows.MessageBox.Show($"Failed to update startup settings: {ex.Message}");
             }
         }

@@ -1,6 +1,11 @@
-﻿using System.Windows;
-using System.Windows.Controls; // <-- Pastikan using ini ada
+﻿using System;
+using System.Windows;
+using System.Windows.Controls;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System.Drawing; // For Rectangle, Point
+using System.Windows.Forms; // For NotifyIcon, MouseButtons
+using System.Windows.Media; // For VisualTreeHelper (WPF)
+using System.Reflection;
 
 namespace Stacks
 {
@@ -10,6 +15,8 @@ namespace Stacks
         {
             InitializeComponent();
             LoadSettingsToUI();
+
+            this.WindowStartupLocation = WindowStartupLocation.Manual;
         }
 
         private void LoadSettingsToUI()
@@ -50,13 +57,58 @@ namespace Stacks
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            // Kembalikan tema ke pengaturan yang tersimpan sebelum menutup
             if (System.Windows.Application.Current is App app)
             {
                 app.ApplyTheme(SettingsManager.Current.Theme);
             }
             this.DialogResult = false;
             this.Close();
+        }
+
+        /// <summary>
+        /// Show the settings window near the tray icon, instead of (0,0).
+        /// </summary>
+        public void ShowNearTray(NotifyIcon trayIcon)
+        {
+            if (trayIcon == null)
+            {
+                this.Show();
+                return;
+            }
+
+            // Use reflection to get the NotifyIcon bounds (tray position)
+            Rectangle trayBounds = Rectangle.Empty;
+            try
+            {
+                var fi = trayIcon.GetType().GetProperty("Bounds", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (fi != null)
+                {
+                    trayBounds = (Rectangle)fi.GetValue(trayIcon);
+                }
+            }
+            catch
+            {
+                // fallback to mouse position
+                trayBounds = new Rectangle(System.Windows.Forms.Control.MousePosition, new System.Drawing.Size(1, 1));
+            }
+
+            if (trayBounds == Rectangle.Empty)
+            {
+                trayBounds = new Rectangle(System.Windows.Forms.Control.MousePosition, new System.Drawing.Size(1, 1));
+            }
+
+            // Get DPI scaling for correct positioning
+            var dpi = VisualTreeHelper.GetDpi(this);
+
+            double screenX = trayBounds.X / dpi.DpiScaleX;
+            double screenY = trayBounds.Y / dpi.DpiScaleY;
+
+            // Position window just above tray icon
+            this.Left = screenX - (this.Width / 2);
+            this.Top = screenY - this.Height - 10;
+
+            this.Show();
+            this.Activate();
         }
     }
 }
