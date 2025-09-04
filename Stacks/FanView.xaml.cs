@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -36,28 +37,8 @@ namespace Stacks
             ViewDeactivated?.Invoke();
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Hide();
-            ViewDeactivated?.Invoke();
-        }
-
-        public async void ToggleAt(Point cursorPosition)
-        {
-            if (this.IsVisible)
-            {
-                this.Hide();
-                ViewDeactivated?.Invoke();
-            }
-            else
-            {
-                await ShowAt(cursorPosition);
-            }
-        }
-
         public async Task ShowAt(Point cursorPosition)
         {
-            // 1. Muat file terlebih dahulu agar konten siap diukur
             await LoadFiles();
 
             this.DataContext = SettingsManager.Instance;
@@ -71,23 +52,18 @@ namespace Stacks
                 WindowBackdrop.RemoveBackdrop(this);
             }
 
-            // PERBAIKAN: Logika untuk mengunci ukuran setelah pengukuran pertama
             if (_isFirstLoad)
             {
-                // Tampilkan di luar layar untuk diukur sesuai konten yang sudah dimuat
                 this.Opacity = 0;
                 this.Left = -9999;
                 this.Show();
                 this.UpdateLayout();
 
-                // Kunci ukuran jendela berdasarkan hasil pengukuran
                 this.Width = this.ActualWidth;
                 this.Height = this.ActualHeight;
 
-                // SANGAT PENTING: Matikan SizeToContent agar jendela tidak lagi meresize
                 this.SizeToContent = SizeToContent.Manual;
 
-                // Sembunyikan dan siapkan untuk ditampilkan di posisi yang benar
                 this.Hide();
                 this.Opacity = 1;
                 _isFirstLoad = false;
@@ -105,9 +81,8 @@ namespace Stacks
         {
             var workArea = SystemParameters.WorkArea;
             const double screenMargin = 12.0;
-            // Ukuran sudah tetap, jadi tidak perlu UpdateLayout() lagi di sini.
             double left = cursorPosition.X - 10;
-            double top = cursorPosition.Y - this.Height - 10; // Gunakan Height yang sudah terkunci
+            double top = cursorPosition.Y - this.Height - 10;
 
             if (left + this.Width > workArea.Right) left = workArea.Right - this.Width - screenMargin;
             if (left < workArea.Left) left = workArea.Left + screenMargin;
@@ -117,7 +92,6 @@ namespace Stacks
             return new Point(left, top);
         }
 
-        // ... Sisa kode tidak berubah ...
         private async Task LoadFiles()
         {
             try
@@ -207,5 +181,34 @@ namespace Stacks
                 System.Windows.MessageBox.Show("Cannot open File Explorer: " + ex.Message);
             }
         }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // PERBAIKAN: Dapatkan jendela utama yang ada (yaitu SettingsWindow),
+            // buat terlihat, dan bawa ke depan.
+            var mainWindow = System.Windows.Application.Current.MainWindow;
+            if (mainWindow != null)
+            {
+                mainWindow.Visibility = Visibility.Visible;
+                mainWindow.Activate();
+            }
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private Point GetMousePosition()
+        {
+            GetCursorPos(out Win32Point w32Mouse);
+            return new Point(w32Mouse.X, w32Mouse.Y);
+        }
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetCursorPos(out Win32Point pt);
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Win32Point { public int X; public int Y; };
     }
 }

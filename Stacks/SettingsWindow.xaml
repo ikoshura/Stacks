@@ -11,26 +11,26 @@
     Title="Stacks Settings"
     Width="420"
     SizeToContent="Height"
-    WindowStartupLocation="Manual"
+    WindowStartupLocation="CenterScreen"
     ExtendsContentIntoTitleBar="True"
     WindowBackdropType="Mica"
     WindowCornerPreference="Round"
     WindowStyle="None"
     ResizeMode="NoResize">
 
-    <!-- biar Acrylic jalan -->
     <ui:FluentWindow.Background>
         <SolidColorBrush Color="Transparent"/>
     </ui:FluentWindow.Background>
 
     <Grid>
-        <!-- Border gelap translucent -->
+        <!-- TRAY ICON TIDAK LAGI DI SINI, DIKELOLA OLEH 'TRAY.XAML' -->
+
         <Border Margin="0"
                 Padding="16"
                 Background="Transparent"
                 CornerRadius="8"
                 BorderThickness="1"
-                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderBrush="#1F000000"
                 MouseLeftButtonDown="Border_MouseLeftButtonDown">
 
             <StackPanel>
@@ -99,13 +99,10 @@
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,24,0,0">
-                    <ui:Button Content="Save"
+                    <ui:Button Content="Save and Close"
                                Appearance="Primary"
                                Click="SaveButton_Click"
                                Margin="0,0,8,0"/>
-                    <ui:Button Content="Cancel"
-                               Appearance="Secondary"
-                               Click="CancelButton_Click"/>
                 </StackPanel>
             </StackPanel>
         </Border>

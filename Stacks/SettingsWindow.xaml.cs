@@ -3,39 +3,18 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Windows;
-// PERBAIKAN: Tambahkan using eksplisit untuk System.Windows.Controls
 using System.Windows.Controls;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
-using Point = System.Windows.Point;
 
 namespace Stacks
 {
     public partial class SettingsWindow : FluentWindow
     {
-        private Point? _initialPosition;
-        private bool _isClosing = false;
-
         public SettingsWindow()
         {
             InitializeComponent();
-
-            this.Deactivated += (s, e) =>
-            {
-                if (!_isClosing)
-                {
-                    this.Close();
-                }
-            };
-
             this.Loaded += SettingsWindow_Loaded;
-        }
-
-        public void ShowAt(Point cursorPosition)
-        {
-            _initialPosition = cursorPosition;
-            this.Show();
-            this.Activate();
         }
 
         private void Border_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -44,33 +23,9 @@ namespace Stacks
                 this.DragMove();
         }
 
-
         private void SettingsWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_initialPosition.HasValue)
-            {
-                PositionWindow(_initialPosition.Value);
-            }
             LoadSettingsToUI();
-        }
-
-        private void PositionWindow(Point cursorPosition)
-        {
-            var workArea = SystemParameters.WorkArea;
-            const double screenMargin = 12.0;
-
-            this.UpdateLayout();
-
-            double left = cursorPosition.X - (this.ActualWidth / 2);
-            double top = cursorPosition.Y - this.ActualHeight - 20;
-
-            if (left + this.ActualWidth > workArea.Right) left = workArea.Right - this.ActualWidth - screenMargin;
-            if (left < workArea.Left) left = workArea.Left + screenMargin;
-            if (top < workArea.Top) top = workArea.Top + screenMargin;
-            if (top + this.ActualHeight > workArea.Bottom) top = workArea.Bottom - this.ActualHeight - screenMargin;
-
-            this.Left = left;
-            this.Top = top;
         }
 
         private void LoadSettingsToUI()
@@ -98,8 +53,6 @@ namespace Stacks
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            _isClosing = true;
-
             var settings = SettingsManager.Current;
             settings.SourceFolderPath = SourceFolderTextBlock.Text;
             settings.RunAtStartup = StartupToggleButton.IsChecked == true;
@@ -109,29 +62,19 @@ namespace Stacks
             StartupManager.SetStartup(settings.RunAtStartup);
             SettingsManager.Save();
 
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
-            if (System.Windows.Application.Current is App app)
+            if (Application.Current is App app)
             {
                 app.ApplyTheme(settings.Theme);
             }
 
-            this.Close();
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            _isClosing = true;
-            this.Close();
+            this.Hide(); // Sembunyikan jendela setelah menyimpan
         }
 
         private void ThemeComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
-            if (sender is not System.Windows.Controls.ComboBox { IsLoaded: true } comboBox) return;
-
+            if (sender is not ComboBox { IsLoaded: true } comboBox) return;
             var selectedTheme = (AppTheme)comboBox.SelectedIndex;
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
-            if (System.Windows.Application.Current is App app)
+            if (Application.Current is App app)
             {
                 app.ApplyTheme(selectedTheme);
             }
@@ -139,14 +82,12 @@ namespace Stacks
 
         private void BackdropToggleButton_OnChecked(object sender, RoutedEventArgs e)
         {
-            if (this.IsLoaded)
-                WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Acrylic);
+            if (this.IsLoaded) WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Mica);
         }
 
         private void BackdropToggleButton_OnUnchecked(object sender, RoutedEventArgs e)
         {
-            if (this.IsLoaded)
-                WindowBackdrop.RemoveBackdrop(this);
+            if (this.IsLoaded) WindowBackdrop.RemoveBackdrop(this);
         }
     }
 }

@@ -19,7 +19,6 @@
     WindowBackdropType="Mica"
     WindowCornerPreference="Round">
 
-    <!-- Transparent supaya Mica jalan -->
     <ui:FluentWindow.Background>
         <SolidColorBrush Color="Transparent"/>
     </ui:FluentWindow.Background>
@@ -33,7 +32,7 @@
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -98,22 +97,34 @@
                 </ItemsControl.Style>
             </ItemsControl>
 
-            <StackPanel Grid.Row="1" Margin="0,4,0,0">
+            <!-- PERBAIKAN: Margin diatur ulang untuk menghilangkan ruang kosong -->
+            <StackPanel Grid.Row="1" Margin="0">
                 <Rectangle Height="1"
                            Fill="{DynamicResource ControlStrokeColorDefaultBrush}"
-                           Margin="8,0,8,8"
+                           Margin="8,4,8,8"
                            Opacity="0.5"/>
-                <ui:Button x:Name="OpenInExplorerButton"
-                           Content="Open in File Explorer"
-                           HorizontalAlignment="Stretch"
-                           Margin="8,0,8,4"
-                           Click="OpenInExplorerButton_Click"/>
-                <ui:Button x:Name="CloseButton"
-                           Content="Close"
-                           Appearance="Secondary"
-                           HorizontalAlignment="Stretch"
-                           Margin="8,4,8,-30"
-                           Click="CloseButton_Click"/>
+
+                <Grid Margin="8,0,8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:Button x:Name="OpenInExplorerButton"
+                               Grid.Column="0"
+                               Content="Open in File Explorer"
+                               HorizontalAlignment="Stretch"
+                               Click="OpenInExplorerButton_Click"/>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                        <ui:Button Appearance="Transparent" ToolTip="Settings" Click="SettingsButton_Click">
+                            <ui:SymbolIcon Symbol="Settings24" />
+                        </ui:Button>
+                        <ui:Button Appearance="Transparent" ToolTip="Exit" Click="ExitButton_Click" Margin="4,0,0,0">
+                            <ui:SymbolIcon Symbol="Power24" />
+                        </ui:Button>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </Grid>
     </Border>
