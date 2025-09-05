@@ -6,7 +6,6 @@ using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using Point = System.Windows.Point;
 using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
 
 namespace Stacks
 {
@@ -77,21 +76,30 @@ namespace Stacks
 
         public void ApplyTheme(AppTheme theme)
         {
-            ApplicationTheme themeToApply = theme switch
+            var themeToApply = theme switch
             {
                 AppTheme.Light => ApplicationTheme.Light,
                 AppTheme.Dark => ApplicationTheme.Dark,
-                _ => ApplicationThemeManager.GetSystemTheme() == SystemTheme.Dark ? ApplicationTheme.Dark : ApplicationTheme.Light
+                _ =>
+                    ApplicationThemeManager.GetSystemTheme() == SystemTheme.Dark
+                        ? ApplicationTheme.Dark
+                        : ApplicationTheme.Light
             };
 
-            ApplicationThemeManager.Apply(themeToApply);
+            // This is the correct and simplified way to apply the theme and accent.
+            // The 'updateAccent' parameter ensures that the accent color is recalculated
+            // based on the new 'themeToApply'.
+            ApplicationThemeManager.Apply(themeToApply, updateAccent: true);
         }
 
         private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
         {
-            if (e.Category == UserPreferenceCategory.General && SettingsManager.Current.Theme == AppTheme.System)
+            if (SettingsManager.Current.Theme == AppTheme.System)
             {
-                Dispatcher.Invoke(() => ApplyTheme(AppTheme.System));
+                if (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.Color)
+                {
+                    Dispatcher.Invoke(() => ApplyTheme(AppTheme.System));
+                }
             }
         }
 
@@ -102,9 +110,16 @@ namespace Stacks
         }
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
-        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        [return: System.Runtime.InteropServices.MarshalAs(
+            System.Runtime.InteropServices.UnmanagedType.Bool
+        )]
         internal static extern bool GetCursorPos(out Win32Point pt);
+
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-        internal struct Win32Point { public Int32 X; public Int32 Y; };
+        internal struct Win32Point
+        {
+            public Int32 X;
+            public Int32 Y;
+        }
     }
 }

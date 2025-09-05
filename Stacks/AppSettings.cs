@@ -12,7 +12,6 @@ namespace Stacks
 
         // PERUBAHAN: Properti ini akan digunakan oleh jendela pengaturan yang baru
         public AppTheme Theme { get; set; } = AppTheme.System;
-        public bool UseAcrylic { get; set; } = true;
 
         public bool RunAtStartup { get; set; } = false;
         public int VerticalOffset { get; set; } = 320;

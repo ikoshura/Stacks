@@ -62,14 +62,7 @@ namespace Stacks
 
             this.DataContext = SettingsManager.Instance;
 
-            if (SettingsManager.Current.UseAcrylic)
-            {
-                WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Mica);
-            }
-            else
-            {
-                WindowBackdrop.RemoveBackdrop(this);
-            }
+            WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Mica);
 
             // PERBAIKAN: Logika untuk mengunci ukuran setelah pengukuran pertama
             if (_isFirstLoad)
@@ -207,5 +200,34 @@ namespace Stacks
                 System.Windows.MessageBox.Show("Cannot open File Explorer: " + ex.Message);
             }
         }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Window window in System.Windows.Application.Current.Windows)
+            {
+                if (window is SettingsWindow)
+                {
+                    window.Activate();
+                    return;
+                }
+            }
+
+            GetCursorPos(out Win32Point w32Mouse);
+            var cursorPosition = new Point(w32Mouse.X, w32Mouse.Y);
+            new SettingsWindow().ShowAt(cursorPosition);
+            this.Hide();
+            ViewDeactivated?.Invoke();
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        internal static extern bool GetCursorPos(out Win32Point pt);
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        internal struct Win32Point { public Int32 X; public Int32 Y; };
     }
 }

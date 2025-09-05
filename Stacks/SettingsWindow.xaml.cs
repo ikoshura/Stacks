@@ -3,9 +3,6 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Windows;
-// PERBAIKAN: Tambahkan using eksplisit untuk System.Windows.Controls
-using System.Windows.Controls;
-using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using Point = System.Windows.Point;
 
@@ -79,7 +76,6 @@ namespace Stacks
             SourceFolderTextBlock.Text = settings.SourceFolderPath;
             StartupToggleButton.IsChecked = settings.RunAtStartup;
             ThemeComboBox.SelectedIndex = (int)settings.Theme;
-            BackdropToggleButton.IsChecked = settings.UseAcrylic;
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -104,16 +100,9 @@ namespace Stacks
             settings.SourceFolderPath = SourceFolderTextBlock.Text;
             settings.RunAtStartup = StartupToggleButton.IsChecked == true;
             settings.Theme = (AppTheme)ThemeComboBox.SelectedIndex;
-            settings.UseAcrylic = BackdropToggleButton.IsChecked == true;
 
             StartupManager.SetStartup(settings.RunAtStartup);
             SettingsManager.Save();
-
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
-            if (System.Windows.Application.Current is App app)
-            {
-                app.ApplyTheme(settings.Theme);
-            }
 
             this.Close();
         }
@@ -121,32 +110,24 @@ namespace Stacks
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             _isClosing = true;
+            // Revert to saved theme if user cancels
+            if (System.Windows.Application.Current is App app)
+            {
+                app.ApplyTheme(SettingsManager.Current.Theme);
+            }
             this.Close();
         }
 
-        private void ThemeComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ThemeComboBox_OnSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
+            // PERBAIKAN: Use the fully qualified name for ComboBox to resolve ambiguity
             if (sender is not System.Windows.Controls.ComboBox { IsLoaded: true } comboBox) return;
 
             var selectedTheme = (AppTheme)comboBox.SelectedIndex;
-            // PERBAIKAN: Menggunakan namespace lengkap untuk menghindari ambiguitas
             if (System.Windows.Application.Current is App app)
             {
                 app.ApplyTheme(selectedTheme);
             }
-        }
-
-        private void BackdropToggleButton_OnChecked(object sender, RoutedEventArgs e)
-        {
-            if (this.IsLoaded)
-                WindowBackdrop.ApplyBackdrop(this, WindowBackdropType.Acrylic);
-        }
-
-        private void BackdropToggleButton_OnUnchecked(object sender, RoutedEventArgs e)
-        {
-            if (this.IsLoaded)
-                WindowBackdrop.RemoveBackdrop(this);
         }
     }
 }

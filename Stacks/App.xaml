@@ -8,8 +8,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- PERUBAHAN: Memuat tema dan kontrol dari Wpf.Ui -->
-                <ui:ThemesDictionary Theme="Dark" />
+                <!-- PERBAIKAN: Hapus atribut 'Theme' untuk membiarkan library yang mengelola -->
+                <ui:ThemesDictionary />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
 

@@ -103,17 +103,49 @@
                            Fill="{DynamicResource ControlStrokeColorDefaultBrush}"
                            Margin="8,0,8,8"
                            Opacity="0.5"/>
-                <ui:Button x:Name="OpenInExplorerButton"
-                           Content="Open in File Explorer"
-                           HorizontalAlignment="Stretch"
-                           Margin="8,0,8,4"
-                           Click="OpenInExplorerButton_Click"/>
-                <ui:Button x:Name="CloseButton"
-                           Content="Close"
-                           Appearance="Secondary"
-                           HorizontalAlignment="Stretch"
-                           Margin="8,4,8,-30"
-                           Click="CloseButton_Click"/>
+
+                <Grid Margin="8,0,8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:Button x:Name="OpenInExplorerButton"
+                               Grid.Column="0"
+                               Content="Open in File Explorer"
+                               Appearance="Primary"
+                               HorizontalAlignment="Stretch"
+                               Click="OpenInExplorerButton_Click"
+                               Margin="0,0,8,0"/>
+
+                    <ui:Button x:Name="SettingsButton"
+                               Grid.Column="1"
+                               Appearance="Secondary"
+                               Icon="{ui:SymbolIcon Settings24}"
+                               Click="SettingsButton_Click"/>
+                </Grid>
+
+                <Grid Margin="8,4,8,-30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:Button x:Name="CloseButton"
+                               Grid.Column="0"
+                               Content="Close"
+                               Appearance="Secondary"
+                               HorizontalAlignment="Stretch"
+                               Click="CloseButton_Click"
+                               Margin="0,0,8,0"/>
+
+                    <ui:Button x:Name="ExitButton"
+                               Grid.Column="1"
+                               Appearance="Secondary"
+                               Icon="{ui:SymbolIcon Power24}"
+                               Click="ExitButton_Click"/>
+
+                </Grid>
             </StackPanel>
         </Grid>
     </Border>

@@ -84,18 +84,6 @@
                     </ComboBox>
                 </ui:CardControl>
 
-                <ui:CardControl Icon="{ui:SymbolIcon WindowApps24}" Margin="0,8,0,0">
-                    <ui:CardControl.Header>
-                        <StackPanel>
-                            <ui:TextBlock FontTypography="BodyStrong" Text="Window Effect"/>
-                            <ui:TextBlock Appearance="Secondary" Text="Apply a semi-transparent effect (Windows 11 only)."/>
-                        </StackPanel>
-                    </ui:CardControl.Header>
-                    <ui:ToggleSwitch x:Name="BackdropToggleButton"
-                                     Checked="BackdropToggleButton_OnChecked"
-                                     Unchecked="BackdropToggleButton_OnUnchecked"/>
-                </ui:CardControl>
-
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,24,0,0">
